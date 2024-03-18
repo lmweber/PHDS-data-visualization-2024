@@ -1,7 +1,7 @@
 ---
-title: "PHDS_Data_Carpentry_data_preprocessing"
-author: "Lukas Weber"
-date: "2024-02-26"
+title: "PHDS Data Visualization Workshop: Data Carpentry dataset (preprocessing)"
+author: "Lukas M. Weber"
+date: "2024-03-18"
 output: html_document
 ---
 
