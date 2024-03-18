@@ -1,7 +1,7 @@
 ---
-title: "PHDS_Data_Carpentry"
+title: "PHDS Data Visualization Workshop: Data Carpentry dataset"
 author: "Lukas Weber"
-date: "2024-02-26"
+date: "2024-03-18"
 output: html_document
 ---
 
@@ -10,21 +10,369 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## Introduction
+# Introduction
 
 This session is adapted from the Data Carpentry lesson "Data visualization with ggplot2": https://datacarpentry.org/R-ecology-lesson/04-visualization-ggplot2.html
 
+The examples in this session show how to generate and customize plots using ggplot2 in R, using an ecology dataset containing survey data on animal species diversity and weights within a study site.
 
-## Examples
 
-```{r}
+# Example
+
+## Load data
+
+We load the dataset in .csv format from GitHub. The saved .csv file on GitHub includes all preprocessing from the earlier chapters in the Data Carpentry materials.
+
+<!-- To do: update using URL in code below -->
+
+```{r, message=FALSE}
 library(tidyverse)
+library(here)
+library(ggplot2)
+library(hexbin)
 ```
-
 
 ```{r}
-# load data from previous chapters in Data Carpentry lesson
-# note: save on GitHub
-surveys_complete <- read_csv("data/surveys_complete.csv")
+# load saved dataset from GitHub
+surveys_complete <- read_csv(here("examples/data/surveys_complete.csv"))
 ```
 
+Have a look at the dataset:
+
+```{r}
+head(surveys_complete)
+```
+
+
+## Scatter plot
+
+Generate an initial scatter plot. Note the first two arguments to the `ggplot2()` function (`data` and `mapping = aes()`), the syntax for `aes()`, the use of `geom_point()`, and the `+` syntax for combining elements of the plot:
+
+```{r}
+# generate an initial scatter plot
+ggplot(surveys_complete, aes(x = weight, y = hindfoot_length)) + 
+  geom_point()
+```
+
+
+### Alternative `geom`:
+
+We can also specify a different `geom`:
+
+```{r}
+# 'geom_hex()'
+ggplot(surveys_complete, aes(x = weight, y = hindfoot_length)) + 
+  geom_hex()
+```
+
+
+### Modifying the plot
+
+We can modify the plot by providing additional arguments:
+
+The `alpha` argument specifies a level of transparency:
+
+```{r}
+# 'alpha' argument
+ggplot(surveys_complete, aes(x = weight, y = hindfoot_length)) + 
+  geom_point(alpha = 0.1)
+```
+
+The `color` argument sets colors:
+
+```{r}
+# 'color' argument
+ggplot(surveys_complete, aes(x = weight, y = hindfoot_length)) + 
+  geom_point(alpha = 0.1, color = "blue")
+```
+
+We can also use the `color` argument within `aes()` to color points by the values of a variable. Note that we can specify `color` within `aes()` either at the top level (within the `ggplot2()` call) or within the `geom_point()` call. This gives flexibility for setting colors only for certain `geoms` or for the whole plot.
+
+```{r}
+# set 'color' using categorical variable
+
+ggplot(surveys_complete, aes(x = weight, y = hindfoot_length)) + 
+  geom_point(alpha = 0.1, aes(color = species_id))
+
+ggplot(surveys_complete, aes(x = weight, y = hindfoot_length, 
+                             color = species_id)) + 
+  geom_point(alpha = 0.1)
+```
+
+
+## Boxplots
+
+Generate boxplots:
+
+```{r}
+# generate boxplots
+ggplot(surveys_complete, aes(x = species_id, y = weight)) + 
+  geom_boxplot()
+```
+
+Add points and additional formatting arguments to the boxplots:
+
+```{r}
+# boxplots with points and formatting
+ggplot(surveys_complete, aes(x = species_id, y = weight)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(alpha = 0.3, color = "tomato")
+```
+
+
+## Violin plots
+
+Alternatively, we can use violin plots:
+
+```{r}
+# generate violin plots
+ggplot(surveys_complete, aes(x = species_id, y = weight)) + 
+  geom_violin()
+```
+
+
+## Line plots
+
+To demonstrate line plots for time series data, we calculate an additional variable:
+
+```{r}
+# calculate number of counts per year for each genus
+yearly_counts <- 
+  surveys_complete |> 
+  count(year, genus)
+
+head(yearly_counts)
+```
+
+To generate line plots, we can specify `group` in `aes()`. However, this does not allow us to identify the lines.
+
+```{r}
+# generate line plot
+ggplot(yearly_counts, aes(x = year, y = n, group = genus)) + 
+  geom_line()
+```
+
+We can use `color` to identify the lines. Note that setting `color` in `aes()` also automatically groups the data.
+
+```{r}
+# color by genus variable
+ggplot(data = yearly_counts, aes(x = year, y = n, color = genus)) + 
+  geom_line()
+```
+
+
+## Facetting
+
+In ggplot, `facetting` refers to splitting plots into multiple panels according to some variable. This can be very useful, and requires a special syntax.
+
+Here, we use `facet_wrap()` to facet the line plots by genus:
+
+```{r}
+# facet by genus
+ggplot(yearly_counts, aes(x = year, y = n)) + 
+  geom_line() + 
+  facet_wrap(vars(genus))
+```
+
+We can also include color. However, in this case we have some redundancy between the facetting and the colors.
+
+```{r}
+# facet by genus and include color
+ggplot(yearly_counts, aes(x = year, y = n, color = genus)) + 
+  geom_line() + 
+  facet_wrap(vars(genus))
+```
+
+Alternatively, we can use facetting and further split the lines by sex. To do this, we need to do some further data manipulation.
+
+```{r}
+# split counts by sex
+yearly_sex_counts <- 
+  surveys_complete |> 
+  count(year, genus, sex)
+```
+
+Now we can create a facetted plot with lines split and colored by the `sex` variable:
+
+```{r}
+# facetted plot
+ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_wrap(vars(genus))
+```
+
+We can also facet by multiple variables using `facet_grid()`. In this case, the plot may be getting quite busy and more difficult to read.
+
+```{r}
+# facet by multiple variables using 'facet_grid()'
+ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_grid(rows = vars(sex), cols = vars(genus))
+```
+
+Alternatively, facets may be organized by either rows or columns:
+
+```{r}
+# facet by rows with one column
+ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_grid(rows = vars(genus))
+```
+
+```{r}
+# facet by columns with one row
+ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_grid(cols = vars(genus))
+```
+
+
+## Themes
+
+Themes provide a convenient way to format plots in ggplot2.
+
+For example, `theme_bw()` adjusts the formatting to show white backgrounds, black borders, gray gridlines, and additional default settings. There are also several other themes available.
+
+```{r}
+# demonstrate 'theme_bw()'
+ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_wrap(vars(genus)) + 
+  theme_bw()
+```
+
+
+## Additional customizations
+
+Additional functions are available to further customize the plot. For example, we can add more informative plot titles and axis titles.
+
+```{r}
+# specify plot title and axis titles
+ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_wrap(vars(genus)) + 
+  labs(title = "Observed genera through time", 
+        x = "Year of observation", 
+       y = "Number of individuals") + 
+  theme_bw()
+```
+
+The `theme()` function can be used to add further customizations, such as font size. Note the special syntax using `element_text()`.
+
+```{r}
+# using 'theme()' to adjust font size
+ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_wrap(vars(genus)) + 
+  labs(title = "Observed genera through time", 
+       x = "Year of observation", 
+       y = "Number of individuals") + 
+  theme_bw() + 
+  theme(text = element_text(size = 16))
+```
+
+Numerous additional options are available for detailed customizations:
+
+```{r}
+# demonstrate additional options for 'theme()'
+ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_wrap(vars(genus)) + 
+  labs(title = "Observed genera through time", 
+       x = "Year of observation", 
+       y = "Number of individuals") + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(color = "grey20", size = 12, angle = 90, 
+                                   hjust = 0.5, vjust = 0.5), 
+        axis.text.y = element_text(color = "gray20", size = 12), 
+        strip.text = element_text(face = "italic"), 
+        text = element_text(size = 16))
+```
+
+
+## Using 'patchwork' for multiple panels
+
+Here, we demonstrate the use of the `patchwork` package to arrange multiple plots in panels.
+
+First, we load the `patchwork` package:
+
+```{r, message=FALSE}
+library(patchwork)
+```
+
+The `patchwork` package uses a specific syntax (`|` for columns, `/` for rows):
+
+```{r}
+# create plots and assign the plots to variables
+
+plot_weight <- ggplot(surveys_complete, aes(x = species_id, y = weight)) + 
+  geom_boxplot() + 
+  labs(x = "Species", y = expression(log[10](Weight))) + 
+  scale_y_log10()
+
+plot_count <- ggplot(yearly_counts, aes(x = year, y = n, color = genus)) + 
+  geom_line() + 
+  labs(x = "Year", 
+       y = "Abundance")
+```
+
+```{r}
+# display plots in rows
+plot_weight / plot_count + 
+  plot_layout(heights = c(3, 2))
+```
+
+```{r}
+# display plots in columns
+plot_weight | plot_count
+```
+
+
+## Export plots
+
+Finally, we can export or save plots using the `ggsave()` function. Usually we will save plots in either `.png` or `.pdf` format. The `ggsave()` function detects the format automatically from the filename.
+
+```{r}
+# generate plot
+my_plot <- ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_wrap(vars(genus)) + 
+  labs(title = "Observed genera through time", 
+       x = "Year of observation", 
+       y = "Number of individuals") + 
+  theme_bw() +
+  theme(axis.text.x = element_text(color = "gray20", size = 12, angle = 90, 
+                                   hjust = 0.5, vjust = 0.5), 
+        axis.text.y = element_text(color = "gray20", size = 12), 
+        text = element_text(size = 16))
+```
+
+```{r}
+# display plot
+my_plot
+```
+
+Save plot in .png format:
+
+```{r}
+# save plot in .png format
+ggsave("plots/my_plot.png", my_plot, width = 15, height = 10)
+```
+
+Save plot in .pdf format:
+
+```{r}
+# save plot in .png format
+ggsave("plots/my_plot.pdf", my_plot, width = 15, height = 10)
+```
+
+We can also specify the resolution for .png format:
+
+```{r}
+# save combined plot with resolution argument in .png format
+plot_combined <- 
+  plot_weight / plot_count + 
+  plot_layout(heights = c(3, 2))
+
+ggsave("plots/plot_combined.png", plot_combined, width = 10, dpi = 300)
+```
