@@ -1,0 +1,36 @@
+---
+title: "PHDS_STexampleData"
+author: "Lukas Weber"
+date: "2024-02-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introduction
+
+In this example we will use a spatial transcriptomics dataset.
+
+
+## Install packages
+
+```{r, message=FALSE}
+# install.packages("BiocManager")
+# BiocManager::install("SpatialExperiment")
+# BiocManager::install("STexampleData")
+```
+
+
+## Load data
+
+```{r, message=FALSE}
+library(STexampleData)
+```
+
+```{r}
+# load data object as SpatialExperiment
+spe <- Visium_humanDLPFC()
+```

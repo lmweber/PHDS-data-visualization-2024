@@ -1,0 +1,63 @@
+---
+title: "PHDS_Data_Carpentry_data_preprocessing"
+author: "Lukas Weber"
+date: "2024-02-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introduction
+
+Script to preprocess dataset from Data Carpentry lesson "Data visualization with ggplot2": https://datacarpentry.org/R-ecology-lesson/04-visualization-ggplot2.html
+
+
+## Data preprocessing
+
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+```{r}
+# download data
+download.file(url = "https://ndownloader.figshare.com/files/2292169", 
+              destfile = "data/portal_data_joined.csv")
+```
+
+```{r}
+# load data
+surveys <- read_csv("data/portal_data_joined.csv")
+```
+
+```{r}
+head(surveys)
+```
+
+```{r}
+# preprocessing steps from Data Carpentry lesson
+
+surveys_complete <- surveys |> 
+  filter(!is.na(weight),           # remove missing weight
+         !is.na(hindfoot_length),  # remove missing hindfoot_length
+         !is.na(sex))              # remove missing sex
+
+# extract the most common species_id
+species_counts <- surveys_complete |> 
+  count(species_id) |> 
+  filter(n >= 50)
+
+# only keep the most common species
+surveys_complete <- surveys_complete |> 
+  filter(species_id %in% species_counts$species_id)
+
+# check: should have 30463 rows and 13 columns
+dim(surveys_complete)
+```
+
+```{r}
+# save preprocessed dataset
+write_csv(surveys_complete, file = "data/surveys_complete.csv")
+```
