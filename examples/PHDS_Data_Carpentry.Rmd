@@ -1,6 +1,6 @@
 ---
 title: "PHDS Data Visualization Workshop: Data Carpentry dataset"
-author: "Lukas Weber"
+author: "Lukas M. Weber"
 date: "2024-03-18"
 output: html_document
 ---
@@ -356,14 +356,14 @@ Save plot in .png format:
 
 ```{r}
 # save plot in .png format
-ggsave("plots/my_plot.png", my_plot, width = 15, height = 10)
+ggsave(here("plots/my_plot.png"), my_plot, width = 15, height = 10)
 ```
 
 Save plot in .pdf format:
 
 ```{r}
 # save plot in .png format
-ggsave("plots/my_plot.pdf", my_plot, width = 15, height = 10)
+ggsave(here("plots/my_plot.pdf"), my_plot, width = 15, height = 10)
 ```
 
 We can also specify the resolution for .png format:
@@ -374,5 +374,5 @@ plot_combined <-
   plot_weight / plot_count + 
   plot_layout(heights = c(3, 2))
 
-ggsave("plots/plot_combined.png", plot_combined, width = 10, dpi = 300)
+ggsave(here("plots/plot_combined.png"), plot_combined, width = 10, dpi = 300)
 ```
