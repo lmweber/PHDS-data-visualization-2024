@@ -1,5 +1,5 @@
 ---
-title: "PHDS Data Visualization Workshop: Spatial transcriptomics dataset"
+title: "PHDS Data Visualization Workshop: Single Cell and Spatial Data"
 author: "Lukas M. Weber"
 date: "2024-03-18"
 output: html_document

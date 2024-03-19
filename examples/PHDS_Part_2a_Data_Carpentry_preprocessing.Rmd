@@ -1,5 +1,5 @@
 ---
-title: "PHDS Data Visualization Workshop: Data Carpentry dataset (preprocessing)"
+title: "PHDS Data Visualization Workshop: Data Carpentry Dataset (Preprocessing)"
 author: "Lukas M. Weber"
 date: "2024-03-18"
 output: html_document
