@@ -1,0 +1,19 @@
+---
+title: "PHDS Data Visualization Workshop: Exercise Session"
+author: "Prasad Patil and Lukas M. Weber"
+date: "2024-03-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+
+Document for exercise session.
+
+Link to "UFO Sightings" dataset: https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-06-20/readme.md
+
+Code to download data:
