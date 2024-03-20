@@ -1,7 +1,7 @@
 ---
 title: "PHDS Data Visualization Workshop: Data Carpentry Dataset (Preprocessing)"
 author: "Lukas M. Weber"
-date: "2024-03-26"
+date: "2024-03-20"
 output: html_document
 ---
 
@@ -10,26 +10,29 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## Introduction
+# Introduction
 
-Script to preprocess dataset from Data Carpentry lesson "Data visualization with ggplot2": https://datacarpentry.org/R-ecology-lesson/04-visualization-ggplot2.html
+Script to perform preprocessing steps for dataset from Data Carpentry lesson "Data visualization with ggplot2": https://datacarpentry.org/R-ecology-lesson/04-visualization-ggplot2.html
+
+The raw and preprocessed datasets are saved as .csv files for use in subsequent sessions.
 
 
-## Data preprocessing
+# Data preprocessing
 
 ```{r, message=FALSE}
 library(tidyverse)
+library(here)
 ```
 
 ```{r}
 # download data
 download.file(url = "https://ndownloader.figshare.com/files/2292169", 
-              destfile = "data/portal_data_joined.csv")
+              destfile = here("data/portal_data_joined.csv"))
 ```
 
 ```{r}
 # load data
-surveys <- read_csv("data/portal_data_joined.csv")
+surveys <- read_csv(here("data/portal_data_joined.csv"))
 ```
 
 ```{r}
@@ -37,7 +40,7 @@ head(surveys)
 ```
 
 ```{r}
-# preprocessing steps from Data Carpentry lesson
+# run preprocessing steps from Data Carpentry lesson materials
 
 surveys_complete <- surveys |> 
   filter(!is.na(weight),           # remove missing weight
@@ -49,7 +52,7 @@ species_counts <- surveys_complete |>
   count(species_id) |> 
   filter(n >= 50)
 
-# only keep the most common species
+# keep the most common species
 surveys_complete <- surveys_complete |> 
   filter(species_id %in% species_counts$species_id)
 
@@ -57,7 +60,10 @@ surveys_complete <- surveys_complete |>
 dim(surveys_complete)
 ```
 
+
+# Save data
+
 ```{r}
 # save preprocessed dataset
-write_csv(surveys_complete, file = "data/surveys_complete.csv")
+write_csv(surveys_complete, file = here("data/surveys_complete.csv"))
 ```
