@@ -1,7 +1,7 @@
 ---
 title: "PHDS Data Visualization Workshop: Exercise Session"
 author: "Prasad Patil and Lukas M. Weber"
-date: "2024-03-26"
+date: "2024-03-20"
 output: html_document
 ---
 
@@ -12,8 +12,35 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-Document for exercise session.
+For the exercise session, we will use the "UFO Sightings" dataset available from the [TidyTuesday](https://github.com/rfordatascience/tidytuesday) project.
 
-Link to "UFO Sightings" dataset: https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-06-20/readme.md
+A link to the UFO Sightings dataset is available here: https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-06-20/readme.md
 
-Code to download data:
+
+# Preprocessing
+
+Below, we provide code to preprocess the dataset by selecting columns we are interested in and creating a new data frame:
+
+```{r, message=FALSE}
+library(tidyverse)
+library(here)
+```
+
+```{r}
+# download dataset
+
+
+# select columns
+
+
+# create data frame
+
+```
+
+
+# Save data
+
+```{r}
+# save dataset
+
+```
