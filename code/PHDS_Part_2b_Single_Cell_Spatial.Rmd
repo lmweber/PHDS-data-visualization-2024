@@ -12,39 +12,54 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-In this example we will use a spatial transcriptomics dataset.
+In this session we will use example datasets from single-cell RNA sequencing and spatial transcriptomics.
+
+We will use R packages from [Bioconductor](https://bioconductor.org/) to process and analyze the datasets.
 
 
-## Install and load packages
+## Load packages
+
+Note that CRAN packages can be installed with `install.packages()`, and Bioconductor packages can be installed with `BiocManager::install()` (after first installing `BiocManager` with `install.packages("BiocManager")`).
 
 ```{r, message=FALSE}
-# install.packages("BiocManager")
-# BiocManager::install("SpatialExperiment")
-# BiocManager::install("STexampleData")
+# load Bioconductor packages
+library(SingleCellExperiment)
+library(scater)
+library(scran)
+library(SingleR)
 ```
 
 
-# Preprocessing
+# Single-cell RNA sequencing dataset
 
-## Load data
+
+
+# Spatial transcriptomics dataset
+
+## Load packages
 
 ```{r, message=FALSE}
-# load data
-
+# load Bioconductor packages
 library(SpatialExperiment)
 library(STexampleData)
-spe <- Visium_humanDLPFC()
-```
-
-
-## Workflow to run preprocessing, dimensionality reduction, and clustering steps
-
-```{r, message=FALSE}
 library(scater)
 library(scran)
 ```
 
+
+## Load data
+
 ```{r}
+# load dataset from STexampleData package
+spe <- Visium_humanDLPFC()
+```
+
+
+## Analysis workflow
+
+```{r}
+# preprocessing
+
 # subset to keep only spots over tissue
 spe <- spe[, colData(spe)$in_tissue == 1]
 
