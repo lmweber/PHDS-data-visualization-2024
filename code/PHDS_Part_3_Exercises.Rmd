@@ -2,7 +2,13 @@
 title: "PHDS Data Visualization Workshop: Exercise Session"
 author: "Prasad Patil and Lukas M. Weber"
 date: "2024-03-26"
-output: html_document
+output: 
+  html_document: 
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: false
 ---
 
 ```{r setup, include=FALSE}
@@ -14,14 +20,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 For the exercise session, we will use the `UFO Sightings` dataset available from the [TidyTuesday](https://github.com/rfordatascience/tidytuesday) project.
 
-A link to the UFO Sightings dataset is available here: https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-06-20/readme.md
+A link to the `UFO Sightings` dataset is available here: https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-06-20/readme.md
 
 The link above includes background about the dataset, a summary of the data variables that are provided, and additional instructions on how to download the data.
 
 
 # Download data
 
-Below, we provide some code to download and preprocess the dataset, and save it as a new .csv file.
+Below, we provide some code to download and preprocess the dataset, and save it as a new `.csv` file.
 
 Specifically, we will add the `latitude` and `longitude` columns from `places.csv` to the main data frame in `ufo_sightings.csv`. For more details, see the information about the data frame at the link above.
 
@@ -50,7 +56,7 @@ places <- tuesdata$places
 day_parts_map <- tuesdata$day_parts_map
 ```
 
-Alternatively, the data objects can also be downloaded and read in from links to the .csv files.
+Alternatively, the data objects can also be downloaded and read in from links to the `.csv` files.
 
 ```{r}
 # alternatively, download and read in from links to .csv files

@@ -2,7 +2,13 @@
 title: "PHDS Data Visualization Workshop: Data Carpentry Dataset"
 author: "Lukas M. Weber"
 date: "2024-03-26"
-output: html_document
+output: 
+  html_document: 
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: false
 ---
 
 ```{r setup, include=FALSE}
@@ -21,7 +27,7 @@ The examples in this session show how to generate and customize plots using ggpl
 
 ## Download and load data
 
-We download and load the dataset in .csv format from GitHub. The saved .csv file on GitHub includes all preprocessing from the earlier chapters in the Data Carpentry materials.
+We download and load the dataset in `.csv` format from GitHub. The saved `.csv` file on GitHub includes all preprocessing from the earlier chapters in the Data Carpentry materials.
 
 Code for the preprocessing steps is also included in the [previous script](https://github.com/lmweber/PHDS-data-visualization-2024/blob/main/code/PHDS_Part_2a_Data_Carpentry_Preprocessing.Rmd), available on GitHub.
 
@@ -56,7 +62,7 @@ head(surveys_complete)
 
 Generate an initial scatter plot to visualize the data.
 
-Note the syntax used for the `ggplot()` function. The first argument (`data`) provides the input data frame, and the second argument (`mapping = aes()`) specifies the mapping of data columns to plot aesthetics (in this case the `x` and `y` axes), followed by the `+` operator to provide additional functions, and the `geom_point()` function to specify that we want to plot the data as points.
+Note the syntax used for the `ggplot()` function. The first argument (`data`) provides the input data frame, and the second argument (`mapping = aes()`) specifies the mapping of data variables to plot aesthetics (in this case the `x` and `y` axes), followed by the `+` operator to provide additional functions, and the `geom_point()` function to specify that we want to plot the data as points.
 
 ```{r}
 # generate an initial scatter plot
@@ -67,9 +73,9 @@ ggplot(surveys_complete, aes(x = weight, y = hindfoot_length)) +
 
 ### Alternative `geom`
 
-We can also specify a different `geom` to plot the data in a different way.
+We can also specify a different `geom` (geometric object) to plot the data in a different way.
 
-This demonstrates how easily ggplot allows us to change the type of plot, once we have provided the data and specified the mapping of data to plot aesthetics.
+This demonstrates how easily ggplot allows us to change the type of plot, once we have provided the data and specified the mapping of data variables to plot aesthetics.
 
 ```{r}
 # 'geom_hex()'
@@ -114,7 +120,7 @@ ggplot(surveys_complete, aes(x = weight, y = hindfoot_length,
 
 ## Boxplots
 
-Generate boxplots.
+Generate boxplots using `geom_boxplot()`.
 
 ```{r}
 # boxplots
@@ -122,7 +128,7 @@ ggplot(surveys_complete, aes(x = species_id, y = weight)) +
   geom_boxplot()
 ```
 
-Add points and additional formatting arguments to the boxplots.
+Add points and additional formatting arguments to the boxplots. Note the order in which the plot elements are added affects the output.
 
 ```{r}
 # boxplots with points and additional formatting
@@ -144,7 +150,7 @@ ggplot(surveys_complete, aes(x = species_id, y = weight)) +
 
 ## Violin plots
 
-Alternatively, we can use violin plots. Which of these alternative visualizations seems to be the most effective for this dataset?
+Alternatively, we can use violin plots. (Which of these alternative visualizations seems to be the most effective for this dataset?)
 
 ```{r}
 # violin plots
@@ -158,7 +164,7 @@ ggplot(surveys_complete, aes(x = species_id, y = weight)) +
 
 ## Line plots
 
-To demonstrate line plots for time series data, we calculate an additional variable.
+To demonstrate line plots for time series data, we first calculate an additional variable.
 
 ```{r}
 # calculate number of counts per year for each genus
@@ -199,7 +205,7 @@ ggplot(yearly_counts, aes(x = year, y = n)) +
   facet_wrap(vars(genus))
 ```
 
-We can also include color. However, in this case note that we have some redundancy between the facetting and the colors. Depending on the dataset, this type of redundancy may either help the reader or overcomplicate things.
+We can also include color. However, in this case we have some redundancy between the facetting and the colors. Depending on the dataset, this type of redundancy may either help the reader or overcomplicate things.
 
 ```{r}
 # facet by 'genus' and include color
@@ -208,7 +214,7 @@ ggplot(yearly_counts, aes(x = year, y = n, color = genus)) +
   facet_wrap(vars(genus))
 ```
 
-Alternatively, we can use facetting and further split the lines by sex. To do this, we need to do some further data manipulation.
+Alternatively, we can use facetting and further split the lines by `sex`. To do this, we need to do some further data manipulation.
 
 ```{r}
 # split counts by sex
@@ -217,7 +223,7 @@ yearly_sex_counts <-
   count(year, genus, sex)
 ```
 
-Now we can create a facetted plot with lines split and colored by the `sex` variable:
+Now we can create a facetted plot with lines split and colored by the `sex` variable.
 
 ```{r}
 # facetted plot
@@ -259,11 +265,22 @@ Themes provide a convenient way to format plots in ggplot2.
 For example, `theme_bw()` (for "black and white") adjusts the formatting to show white backgrounds, black borders, gray gridlines, and additional default settings. There are also several other themes available.
 
 ```{r}
-# demonstrate 'theme_bw()'
+# demonstrate themes
+
 ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
   geom_line() + 
   facet_wrap(vars(genus)) + 
   theme_bw()
+
+ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_wrap(vars(genus)) + 
+  theme_classic()
+
+ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) + 
+  geom_line() + 
+  facet_wrap(vars(genus)) + 
+  theme_minimal()
 ```
 
 
@@ -330,7 +347,7 @@ The `patchwork` package uses a specific syntax (`|` for columns, `/` for rows).
 We start by creating some plots and storing them by assigning them to variables.
 
 ```{r}
-# create plots and assign the plots to variables
+# create plots and assign to variables
 
 plot_weight <- ggplot(surveys_complete, aes(x = species_id, y = weight)) + 
   geom_boxplot() + 
@@ -360,7 +377,7 @@ plot_weight | plot_count
 ```
 
 
-## Export plots
+# Export plots
 
 Finally, we can export or save plots using the `ggsave()` function. Usually we will save plots in either `.png` or `.pdf` format. The `ggsave()` function detects the format automatically from the file name.
 
@@ -384,21 +401,21 @@ my_plot <- ggplot(yearly_sex_counts, aes(x = year, y = n, color = sex)) +
 my_plot
 ```
 
-Save plot in .png format.
+Save plot in `.png` format.
 
 ```{r}
 # save plot in .png format
 ggsave(here("plots/my_plot.png"), my_plot, width = 15, height = 10)
 ```
 
-Save plot in .pdf format.
+Save plot in `.pdf` format.
 
 ```{r}
 # save plot in .png format
 ggsave(here("plots/my_plot.pdf"), my_plot, width = 15, height = 10)
 ```
 
-We can also specify the resolution for .png format. Here, we save a combined plot using `patchwork` and `ggsave()` in `.png` format with a customized resolution.
+We can also specify the resolution for `.png` format. Here, we save a combined plot using `patchwork` and `ggsave()` in `.png` format with a customized resolution.
 
 ```{r}
 # save combined plot with custom resolution in .png format

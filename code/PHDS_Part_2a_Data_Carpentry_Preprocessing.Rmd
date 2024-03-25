@@ -1,8 +1,14 @@
 ---
 title: "PHDS Data Visualization Workshop: Data Carpentry Dataset (Preprocessing)"
 author: "Lukas M. Weber"
-date: "2024-03-20"
-output: html_document
+date: "2024-03-26"
+output: 
+  html_document: 
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: false
 ---
 
 ```{r setup, include=FALSE}
@@ -14,7 +20,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Script to perform preprocessing steps for dataset from Data Carpentry lesson "Data visualization with ggplot2": https://datacarpentry.org/R-ecology-lesson/04-visualization-ggplot2.html
 
-The raw and preprocessed datasets are saved as .csv files for use in subsequent sessions.
+The raw and preprocessed datasets are saved as `.csv` files for use in subsequent sessions.
 
 
 # Data preprocessing
@@ -43,16 +49,16 @@ head(surveys)
 # run preprocessing steps from Data Carpentry lesson materials
 
 surveys_complete <- surveys |> 
-  filter(!is.na(weight),           # remove missing weight
-         !is.na(hindfoot_length),  # remove missing hindfoot_length
-         !is.na(sex))              # remove missing sex
+  filter(!is.na(weight),           # remove missing 'weight'
+         !is.na(hindfoot_length),  # remove missing 'hindfoot_length'
+         !is.na(sex))              # remove missing 'sex'
 
-# extract the most common species_id
+# extract the most common 'species_id'
 species_counts <- surveys_complete |> 
   count(species_id) |> 
   filter(n >= 50)
 
-# keep the most common species
+# keep the most common 'species_id'
 surveys_complete <- surveys_complete |> 
   filter(species_id %in% species_counts$species_id)
 
