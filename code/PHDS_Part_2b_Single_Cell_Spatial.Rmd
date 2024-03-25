@@ -12,9 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-In this session we will use example datasets from single-cell RNA sequencing and spatial transcriptomics to demonstrate additional types of visualizations including reduced dimension plots and heatmaps.
+In this session we will use example datasets from single-cell RNA sequencing and spatial transcriptomics to demonstrate additional types of visualizations, including reduced dimension plots, spatial plots, and heatmaps.
 
-We will use R packages from [Bioconductor](https://bioconductor.org/) for some of the data processing and visualizations.
+We will use R packages from [Bioconductor](https://bioconductor.org/) for the data processing and some of the visualizations.
 
 To install packages from Bioconductor, first install the `BiocManager` package from CRAN with `install.packages("BiocManager")`, and then use the command `BiocManager::install()`.
 
@@ -40,7 +40,7 @@ library(ComplexHeatmap)
 
 ## Load data
 
-We load an example single-cell dataset from the `TENxPBMCData` package. This package contains single-cell RNA sequencing datasets from peripheral blood mononuclear cells (PBMCs) measured with 10x Genomics platforms and saved in `SingleCellExperiment` format.
+We load an example single-cell dataset from the `TENxPBMCData` package. This package contains single-cell RNA sequencing data from peripheral blood mononuclear cells (PBMCs) measured with 10x Genomics platforms and saved in `SingleCellExperiment` format.
 
 ```{r}
 # load dataset
@@ -53,7 +53,7 @@ dim(sce)
 
 ## Workflow
 
-We run some steps from a short analysis workflow on this dataset. We skip several analysis steps here (in particular quality control), since we are mainly interested in using this dataset for visualization purposes.
+We run some steps from a short analysis workflow on this dataset. We skip several analysis steps here (in particular quality control), since we are mainly interested in using this dataset for demonstration purposes to generate several new types of visualizations.
 
 For more details on the analysis workflow, see the [Orchestrating Single-Cell Analysis with Bioconductor](https://bioconductor.org/books/3.18/OSCA.workflows/unfiltered-human-pbmcs-10x-genomics.html) online book.
 
@@ -121,11 +121,11 @@ ggplot(df, aes(x = PC1, y = PC2, color = label)) +
   theme(panel.grid = element_blank())
 ```
 
-Alternatively, we can generate t-SNE or UMAP plots. The t-SNE and UMAP algorithms are commonly used in the single-cell field to visualize clustering results in high-dimensional data. These are relatively complicated non-linear algorithms, which tend to provide a better separation of clusters in a two-dimensional visualization. However, caution is also needed when interpreting the plots, since they can be misleading by introducing cluster separation where none exists, and by generating an arbitrary random spatial distribution of the clusters.
+Alternatively, we can generate t-SNE or UMAP plots. The t-SNE and UMAP algorithms are commonly used in the single-cell field to visualize clustering results in high-dimensional data. These are relatively complicated non-linear algorithms, which tend to provide a better separation of clusters in a two-dimensional visualization. However, caution is also needed when interpreting the plots, since they can be misleading by introducing cluster separation where none exists, and by generating an arbitrary relative spatial arrangement of the clusters.
 
 Here, we use functions from the `scater` package to generate the t-SNE and UMAP plots.
 
-Observe that the clusters are further separated in the UMAP plot than in the t-SNE plot, and that the relative spatial arrangement of the clusters is somewhat arbitrary and differs between plots (or between random seeds when running the algorithms above).
+Observe that the clusters are more clearly separated in the UMAP plot than in the t-SNE plot, and that the relative spatial arrangement of the clusters differs between the two plots (and also differs between random seeds when running the algorithms).
 
 ```{r}
 # t-SNE plot
@@ -142,7 +142,7 @@ plotUMAP(sce, color_by = "label")
 
 Here, we demonstrate heatmaps as a way to visualize the top expressed marker genes per cluster.
 
-First, we obtain the top marker genes for cluster 5 with some additional code continuing from the workflow above.
+First, we obtain the top marker genes for cluster 5 using some additional code continuing from the workflow above.
 
 ```{r}
 # top marker genes for cluster 5
@@ -151,19 +151,19 @@ best <- top_markers[1:20, ]
 lfcs <- getMarkerEffects(best)
 ```
 
-Now, create a heatmap using the `pheatmap` package. This shows marker genes in rows, clusters in columns, and log-fold-change expression as color gradient.
+Now, create a heatmap using the `pheatmap` package. This shows marker genes in rows, clusters in columns, and log-fold-change expression as color gradient. Rows and columns are automatically grouped using additional clustering (which may either help the reader or possibly mislead or overcomplicate things, depending on the dataset).
 
 ```{r}
 # heatmap
 pheatmap(lfcs, breaks = seq(-5, 5, length.out = 101))
 ```
 
-An alternative package to create heatmaps is [ComplexHeatmap](https://bioconductor.org/packages/ComplexHeatmap), which provides powerful and detailed options for customized formatting, and includes extensive documentation and tutorials.
+An alternative package to create heatmaps is [ComplexHeatmap](https://bioconductor.org/packages/ComplexHeatmap), which provides extensive and powerful options for customized formatting, and includes detailed documentation and tutorials.
 
 
 # Violin plots
 
-Alternatively, we can also use violin plots to visualize the top marker genes per cluster. Below, we show an example using the `scater` package. This shows the same information as the heatmap above, represented using a different type of visualization. Which is more effective?
+Alternatively, we can also use violin plots to visualize the top marker genes per cluster. Below, we show an example using the `scater` package. This shows the same information as the heatmap above, represented using a different type of visualization. (Which is more effective for this dataset?)
 
 ```{r}
 # violin plots
@@ -175,7 +175,7 @@ plotExpression(sce, features = rownames(best), x = "label", color_by = "label")
 
 ## Load data
 
-In this example, we use a spatial transcriptomics dataset from the `STexampleData` package. This is a spatial transcriptomics dataset from the dorsolateral prefrontal cortex (DLPFC) region in a postmortem human brain sample, measured with the 10x Genomics Visium platform and saved in `SpatialExperiment` format.
+In this example, we use a spatial transcriptomics dataset from the `STexampleData` package. This is a spatial transcriptomics dataset from the dorsolateral prefrontal cortex (DLPFC) region in a postmortem human brain sample, measured with the 10x Genomics Visium platform, and saved in `SpatialExperiment` format.
 
 ```{r}
 # load dataset
@@ -212,14 +212,6 @@ spe <- runPCA(spe, subset_row = top_hvgs)
 set.seed(123)
 spe <- runUMAP(spe, dimred = "PCA")
 colnames(reducedDim(spe, "UMAP")) <- paste0("UMAP", 1:2)
-
-# clustering
-# set.seed(123)
-# k <- 10
-# g <- buildSNNGraph(spe, k = k, use.dimred = "PCA")
-# g_walk <- igraph::cluster_walktrap(g)
-# clus <- g_walk$membership
-# colLabels(spe) <- factor(clus)
 ```
 
 
@@ -227,7 +219,7 @@ colnames(reducedDim(spe, "UMAP")) <- paste0("UMAP", 1:2)
 
 For spatial data, we can generate a spatial plot showing annotation labels or expression intensity in x-y coordinates.
 
-First, we create a data frame containing the data for each spatial measurement location (spot) stored in `colData(spe)`, `spatialCoords(spe)`, and `reducedDim(spe)`.
+First, we create a data frame containing the data for each spot (spatial measurement location), stored in `colData(spe)`, `spatialCoords(spe)`, and `reducedDim(spe)`.
 
 ```{r}
 # set up data frame
