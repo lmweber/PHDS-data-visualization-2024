@@ -1,8 +1,14 @@
 ---
-title: "PHDS Data Visualization Workshop: Single-Cell and Spatial Data"
+title: "PHDS Data Visualization Workshop: Single-Cell and Spatial Datasets"
 author: "Lukas M. Weber"
 date: "2024-03-26"
-output: html_document
+output: 
+  html_document: 
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: false
 ---
 
 ```{r setup, include=FALSE}
@@ -40,7 +46,7 @@ library(ComplexHeatmap)
 
 ## Load data
 
-We load an example single-cell dataset from the `TENxPBMCData` package. This package contains single-cell RNA sequencing data from peripheral blood mononuclear cells (PBMCs) measured with 10x Genomics platforms and saved in `SingleCellExperiment` format.
+We load an example single-cell dataset from the `TENxPBMCData` package. This package contains single-cell RNA sequencing data from peripheral blood mononuclear cells (PBMCs) measured with 10x Genomics platforms, and saved in `SingleCellExperiment` format.
 
 ```{r}
 # load dataset
@@ -96,7 +102,7 @@ markers <- findMarkers(sce, pval.type = "some", direction = "up")
 
 Here, we demonstrate several types of reduced dimension plots. These provide alternative ways to visualize structure in high-dimensional data.
 
-To do this, we need to first create a data frame containing all the variables to plot. These are stored in `colData(sce)` and `reducedDim(sce)`.
+To do this, we need to first create a data frame containing all the variables to plot. These are stored in `colData(sce)` and `reducedDim(sce)` in the `SingleCellExperiment` object.
 
 ```{r}
 # create data frame
@@ -123,18 +129,24 @@ ggplot(df, aes(x = PC1, y = PC2, color = label)) +
 
 Alternatively, we can generate t-SNE or UMAP plots. The t-SNE and UMAP algorithms are commonly used in the single-cell field to visualize clustering results in high-dimensional data. These are relatively complicated non-linear algorithms, which tend to provide a better separation of clusters in a two-dimensional visualization. However, caution is also needed when interpreting the plots, since they can be misleading by introducing cluster separation where none exists, and by generating an arbitrary relative spatial arrangement of the clusters.
 
-Here, we use functions from the `scater` package to generate the t-SNE and UMAP plots.
-
 Observe that the clusters are more clearly separated in the UMAP plot than in the t-SNE plot, and that the relative spatial arrangement of the clusters differs between the two plots (and also differs between random seeds when running the algorithms).
 
 ```{r}
 # t-SNE plot
-plotTSNE(sce, color_by = "label")
+ggplot(df, aes(x = TSNE1, y = TSNE2, color = label)) + 
+  geom_point(alpha = 0.5, size = 0.5) + 
+  ggtitle("t-SNE") + 
+  theme_bw() + 
+  theme(panel.grid = element_blank())
 ```
 
 ```{r}
 # UMAP plot
-plotUMAP(sce, color_by = "label")
+ggplot(df, aes(x = UMAP1, y = UMAP2, color = label)) + 
+  geom_point(alpha = 0.5, size = 0.5) + 
+  ggtitle("UMAP") + 
+  theme_bw() + 
+  theme(panel.grid = element_blank())
 ```
 
 
@@ -154,18 +166,40 @@ lfcs <- getMarkerEffects(best)
 Now, create a heatmap using the `pheatmap` package. This shows marker genes in rows, clusters in columns, and log-fold-change expression as color gradient. Rows and columns are automatically grouped using additional clustering (which may either help the reader or possibly mislead or overcomplicate things, depending on the dataset).
 
 ```{r}
-# heatmap
+# heatmap using pheatmap
 pheatmap(lfcs, breaks = seq(-5, 5, length.out = 101))
 ```
 
 An alternative package to create heatmaps is [ComplexHeatmap](https://bioconductor.org/packages/ComplexHeatmap), which provides extensive and powerful options for customized formatting, and includes detailed documentation and tutorials.
 
-
-# Violin plots
-
-Alternatively, we can also use violin plots to visualize the top marker genes per cluster. Below, we show an example using the `scater` package. This shows the same information as the heatmap above, represented using a different type of visualization. (Which is more effective for this dataset?)
+Here, we re-create the above heatmap using `ComplexHeatmap`, along with additional formatting options.
 
 ```{r}
+# heatmap using ComplexHeatmap
+Heatmap(lfcs)
+```
+
+```{r}
+# ComplexHeatmap with additional formatting
+Heatmap(
+  lfcs, 
+  name = "log2-fold change", 
+  column_title = "cluster", 
+  column_title_side = "bottom", 
+  row_title = "gene", 
+  row_names_gp = gpar(fontface = "italic"), 
+  rect_gp = gpar(col = "white", lwd = 1.5)
+)
+```
+
+
+## Violin plots
+
+Alternatively, we can also use violin plots to visualize the top marker genes per cluster. Below, we show an example using a plotting function from the `scater` package.
+
+This shows the same information as the heatmap above, represented using a different type of visualization. (Which is more effective for this dataset?)
+
+```{r, fig.height=8}
 # violin plots
 plotExpression(sce, features = rownames(best), x = "label", color_by = "label")
 ```
@@ -189,6 +223,10 @@ dim(spe)
 ## Workflow
 
 We run some steps from a short analysis workflow to prepare the dataset. As above, we skip several analysis steps here, since we are using the dataset for demonstration purposes to generate visualizations only.
+
+For more details on the analysis workflow, see the [Best Practices for Spatial Transcriptomics Analysis with Bioconductor](https://lmweber.org/BestPracticesST/) online book.
+
+The [ggspavis](https://bioconductor.org/packages/ggspavis) package also provides plotting functions for spatial transcriptomics data. Here, we use `ggplot` code instead, to show how the plots are built up.
 
 ```{r}
 # preprocessing
@@ -219,7 +257,7 @@ colnames(reducedDim(spe, "UMAP")) <- paste0("UMAP", 1:2)
 
 For spatial data, we can generate a spatial plot showing annotation labels or expression intensity in x-y coordinates.
 
-First, we create a data frame containing the data for each spot (spatial measurement location), stored in `colData(spe)`, `spatialCoords(spe)`, and `reducedDim(spe)`.
+First, we create a data frame containing the data for each spot (spatial measurement location), stored in `colData(spe)`, `spatialCoords(spe)`, and `reducedDim(spe)` in the `SpatialExperiment` object.
 
 ```{r}
 # set up data frame
@@ -242,7 +280,7 @@ pal <- c("#F0027F", "#377EB8", "#4DAF4A", "#984EA3",
 
 # spatial plot showing annotation labels
 ggplot(df, aes(x = x, y = y, color = label)) + 
-  geom_point(size = 0.5) + 
+  geom_point(size = 0.6) + 
   scale_color_manual(values = pal) + 
   coord_fixed() + 
   scale_y_reverse() + 
@@ -255,7 +293,7 @@ ggplot(df, aes(x = x, y = y, color = label)) +
   guides(color = guide_legend(override.aes = list(size = 2)))
 ```
 
-Alternatively, create a plot showing expression intensity of a specific gene of interest.
+Alternatively, create a plot showing expression intensity of a specific gene of interest in x-y coordinates.
 
 ```{r}
 # set up data frame
@@ -267,7 +305,7 @@ df <- cbind(df, gene = counts(spe)[ix, ])
 ```{r}
 # spatial plot showing gene expression
 ggplot(df, aes(x = x, y = y, color = gene)) + 
-  geom_point(size = 0.5) + 
+  geom_point(size = 0.6) + 
   scale_color_gradient(low = "gray85", high = "blue") + 
   coord_fixed() + 
   scale_y_reverse() + 
