@@ -181,7 +181,7 @@ We can use `color` to identify the lines. Note that setting `color` in `aes()` a
 
 ```{r}
 # color by 'genus' variable
-ggplot(data = yearly_counts, aes(x = year, y = n, color = genus)) + 
+ggplot(yearly_counts, aes(x = year, y = n, color = genus)) + 
   geom_line()
 ```
 
