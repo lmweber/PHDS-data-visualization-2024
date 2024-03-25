@@ -1,5 +1,5 @@
 ---
-title: "PHDS Data Visualization Workshop: Single Cell and Spatial Data"
+title: "PHDS Data Visualization Workshop: Single-Cell and Spatial Data"
 author: "Lukas M. Weber"
 date: "2024-03-26"
 output: html_document
@@ -12,175 +12,312 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-In this session we will use example datasets from single-cell RNA sequencing and spatial transcriptomics.
+In this session we will use example datasets from single-cell RNA sequencing and spatial transcriptomics to demonstrate additional types of visualizations including reduced dimension plots and heatmaps.
 
-We will use R packages from [Bioconductor](https://bioconductor.org/) to process and analyze the datasets.
+We will use R packages from [Bioconductor](https://bioconductor.org/) for some of the data processing and visualizations.
+
+To install packages from Bioconductor, first install the `BiocManager` package from CRAN with `install.packages("BiocManager")`, and then use the command `BiocManager::install()`.
 
 
 ## Load packages
 
-Note that CRAN packages can be installed with `install.packages()`, and Bioconductor packages can be installed with `BiocManager::install()` (after first installing `BiocManager` with `install.packages("BiocManager")`).
-
 ```{r, message=FALSE}
-# load Bioconductor packages
+library(tidyverse)
+library(here)
+library(ggplot2)
 library(SingleCellExperiment)
-library(scater)
-library(scran)
-library(SingleR)
-```
-
-
-# Single-cell RNA sequencing dataset
-
-
-
-# Spatial transcriptomics dataset
-
-## Load packages
-
-```{r, message=FALSE}
-# load Bioconductor packages
 library(SpatialExperiment)
 library(STexampleData)
+library(TENxPBMCData)
 library(scater)
 library(scran)
+library(pheatmap)
+library(ComplexHeatmap)
 ```
 
+
+# Single-cell dataset
 
 ## Load data
 
+We load an example single-cell dataset from the `TENxPBMCData` package. This package contains single-cell RNA sequencing datasets from peripheral blood mononuclear cells (PBMCs) measured with 10x Genomics platforms and saved in `SingleCellExperiment` format.
+
 ```{r}
-# load dataset from STexampleData package
-spe <- Visium_humanDLPFC()
+# load dataset
+sce <- TENxPBMCData(dataset = "pbmc4k")
+
+sce
+dim(sce)
 ```
 
 
-## Analysis workflow
+## Workflow
+
+We run some steps from a short analysis workflow on this dataset. We skip several analysis steps here (in particular quality control), since we are mainly interested in using this dataset for visualization purposes.
+
+For more details on the analysis workflow, see the [Orchestrating Single-Cell Analysis with Bioconductor](https://bioconductor.org/books/3.18/OSCA.workflows/unfiltered-human-pbmcs-10x-genomics.html) online book.
 
 ```{r}
 # preprocessing
+rownames(sce) <- rowData(sce)$Symbol_TENx
 
-# subset to keep only spots over tissue
-spe <- spe[, colData(spe)$in_tissue == 1]
+# normalization
+set.seed(123)
+quickclus <- quickCluster(sce)
+table(quickclus)
+sce <- computeSumFactors(sce, cluster = quickclus)
+sce <- logNormCounts(sce)
 
-# identify mitochondrial genes
-is_mito <- grepl("(^MT-)|(^mt-)", rowData(spe)$gene_name)
+# variance modeling
+set.seed(123)
+dec <- modelGeneVarByPoisson(sce)
+hvgs <- getTopHVGs(dec, prop = 0.1)
 
-# calculate per-spot QC metrics
-spe <- addPerCellQC(spe, subsets = list(mito = is_mito))
-
-# no additional quality control needed for this dataset
-```
-
-```{r}
-# calculate logcounts
-spe <- logNormCounts(spe)
-```
-
-```{r}
-# feature selection
-
-# remove mitochondrial genes
-spe <- spe[!is_mito, ]
-# fit mean-variance relationship
-dec <- modelGeneVar(spe)
-# select top HVGs
-top_hvgs <- getTopHVGs(dec, prop = 0.1)
-```
-
-```{r}
 # dimensionality reduction
-
-# compute PCA
 set.seed(123)
-spe <- runPCA(spe, subset_row = top_hvgs)
-
-# compute UMAP on top 50 PCs
+sce <- denoisePCA(sce, subset.row = hvgs, technical = dec)
 set.seed(123)
-spe <- runUMAP(spe, dimred = "PCA")
-# update column names
-colnames(reducedDim(spe, "UMAP")) <- paste0("UMAP", 1:2)
-```
+sce <- runTSNE(sce, dimred = "PCA")
+set.seed(123)
+sce <- runUMAP(sce, dimred = "PCA")
 
-```{r}
 # clustering
+g <- buildSNNGraph(sce, k = 10, use.dimred = "PCA")
+clus <- igraph::cluster_walktrap(g)$membership
+table(clus)
+colLabels(sce) <- factor(clus)
 
-# graph-based clustering
-set.seed(123)
-k <- 10
-g <- buildSNNGraph(spe, k = k, use.dimred = "PCA")
-g_walk <- igraph::cluster_walktrap(g)
-clus <- g_walk$membership
-colLabels(spe) <- factor(clus)
-```
-
-
-# Visualizations
-
-We use functions available in the `ggspavis` package, and also demonstrate how to create these using `ggplot2` code.
-
-```{r, message=FALSE}
-library(ggspavis)
-```
-
-
-## Spatial plots
-
-Here we demonstrate how to generate spatial plots in x-y coordinates.
-
-Basic x-y plot:
-
-```{r}
-plotSpots(spe)
-```
-
-Annotate by color using a categorical variable (reference cluster labels):
-
-```{r}
-plotSpots(spe, annotate = "ground_truth")
-```
-
-Adjust color palette:
-
-```{r}
-plotSpots(spe, annotate = "ground_truth", pal = "libd_layer_colors")
-```
-
-Annotate by color using a different categorical variable (clustering labels):
-
-```{r}
-plotSpots(spe, annotate = "label", pal = "libd_layer_colors")
-```
-
-Annotate by color using continuous variable (expression of a specific gene):
-
-```{r}
-plotSpots(spe, annotate = "PCP4")
+# differential expression
+markers <- findMarkers(sce, pval.type = "some", direction = "up")
 ```
 
 
 ## Reduced dimension plots
 
-Principal component analysis (PCA):
+Here, we demonstrate several types of reduced dimension plots. These provide alternative ways to visualize structure in high-dimensional data.
+
+To do this, we need to first create a data frame containing all the variables to plot. These are stored in `colData(sce)` and `reducedDim(sce)`.
 
 ```{r}
-plotDimRed(spe, plot_type = "PCA")
+# create data frame
+df <- cbind.data.frame(
+  colData(sce), 
+  reducedDim(sce, "PCA"), 
+  reducedDim(sce, "TSNE"), 
+  reducedDim(sce, "UMAP")
+)
+
+head(df, 3)
 ```
 
-Principal component analysis (PCA) with annotation by a categorical variable:
+First, we generate a principal component analysis (PCA) plot showing the first two principal components (PCs) using `ggplot`. We plot clusters by color and add several additional formatting options.
 
 ```{r}
-plotDimRed(spe, plot_type = "PCA", annotate = "label")
+# PCA plot
+ggplot(df, aes(x = PC1, y = PC2, color = label)) + 
+  geom_point(alpha = 0.5, size = 0.5) + 
+  ggtitle("PCA") + 
+  theme_bw() + 
+  theme(panel.grid = element_blank())
 ```
 
-UMAP:
+Alternatively, we can generate t-SNE or UMAP plots. The t-SNE and UMAP algorithms are commonly used in the single-cell field to visualize clustering results in high-dimensional data. These are relatively complicated non-linear algorithms, which tend to provide a better separation of clusters in a two-dimensional visualization. However, caution is also needed when interpreting the plots, since they can be misleading by introducing cluster separation where none exists, and by generating an arbitrary random spatial distribution of the clusters.
+
+Here, we use functions from the `scater` package to generate the t-SNE and UMAP plots.
+
+Observe that the clusters are further separated in the UMAP plot than in the t-SNE plot, and that the relative spatial arrangement of the clusters is somewhat arbitrary and differs between plots (or between random seeds when running the algorithms above).
 
 ```{r}
-plotDimRed(spe, plot_type = "UMAP")
+# t-SNE plot
+plotTSNE(sce, color_by = "label")
 ```
 
-UMAP with annotation by a categorical variable:
+```{r}
+# UMAP plot
+plotUMAP(sce, color_by = "label")
+```
+
+
+## Heatmaps
+
+Here, we demonstrate heatmaps as a way to visualize the top expressed marker genes per cluster.
+
+First, we obtain the top marker genes for cluster 5 with some additional code continuing from the workflow above.
 
 ```{r}
-plotDimRed(spe, plot_type = "UMAP", annotate = "label")
+# top marker genes for cluster 5
+top_markers <- markers[["5"]]
+best <- top_markers[1:20, ]
+lfcs <- getMarkerEffects(best)
+```
+
+Now, create a heatmap using the `pheatmap` package. This shows marker genes in rows, clusters in columns, and log-fold-change expression as color gradient.
+
+```{r}
+# heatmap
+pheatmap(lfcs, breaks = seq(-5, 5, length.out = 101))
+```
+
+An alternative package to create heatmaps is [ComplexHeatmap](https://bioconductor.org/packages/ComplexHeatmap), which provides powerful and detailed options for customized formatting, and includes extensive documentation and tutorials.
+
+
+# Violin plots
+
+Alternatively, we can also use violin plots to visualize the top marker genes per cluster. Below, we show an example using the `scater` package. This shows the same information as the heatmap above, represented using a different type of visualization. Which is more effective?
+
+```{r}
+# violin plots
+plotExpression(sce, features = rownames(best), x = "label", color_by = "label")
+```
+
+
+# Spatial transcriptomics dataset
+
+## Load data
+
+In this example, we use a spatial transcriptomics dataset from the `STexampleData` package. This is a spatial transcriptomics dataset from the dorsolateral prefrontal cortex (DLPFC) region in a postmortem human brain sample, measured with the 10x Genomics Visium platform and saved in `SpatialExperiment` format.
+
+```{r}
+# load dataset
+spe <- Visium_humanDLPFC()
+
+spe
+dim(spe)
+```
+
+
+## Workflow
+
+We run some steps from a short analysis workflow to prepare the dataset. As above, we skip several analysis steps here, since we are using the dataset for demonstration purposes to generate visualizations only.
+
+```{r}
+# preprocessing
+spe <- spe[, colData(spe)$in_tissue == 1]
+colnames(spatialCoords(spe)) <- c("x", "y")
+colData(spe)$label <- colData(spe)$ground_truth
+
+# normalization
+spe <- logNormCounts(spe)
+
+# feature selection
+is_mito <- grepl("(^MT-)|(^mt-)", rowData(spe)$gene_name)
+table(is_mito)
+spe <- spe[!is_mito, ]
+dec <- modelGeneVar(spe)
+top_hvgs <- getTopHVGs(dec, prop = 0.1)
+
+# dimensionality reduction
+set.seed(123)
+spe <- runPCA(spe, subset_row = top_hvgs)
+set.seed(123)
+spe <- runUMAP(spe, dimred = "PCA")
+colnames(reducedDim(spe, "UMAP")) <- paste0("UMAP", 1:2)
+
+# clustering
+# set.seed(123)
+# k <- 10
+# g <- buildSNNGraph(spe, k = k, use.dimred = "PCA")
+# g_walk <- igraph::cluster_walktrap(g)
+# clus <- g_walk$membership
+# colLabels(spe) <- factor(clus)
+```
+
+
+## Spatial plots
+
+For spatial data, we can generate a spatial plot showing annotation labels or expression intensity in x-y coordinates.
+
+First, we create a data frame containing the data for each spatial measurement location (spot) stored in `colData(spe)`, `spatialCoords(spe)`, and `reducedDim(spe)`.
+
+```{r}
+# set up data frame
+df <- cbind.data.frame(
+  colData(spe), 
+  spatialCoords(spe), 
+  reducedDim(spe, "PCA"), 
+  reducedDim(spe, "UMAP")
+)
+
+head(df, 2)
+```
+
+Now, we can create a spatial plot showing manually annotated reference labels in x-y coordinates. We also include several plot formatting options.
+
+```{r}
+# color palette
+pal <- c("#F0027F", "#377EB8", "#4DAF4A", "#984EA3", 
+         "#FFD700", "#FF7F00", "#1A1A1A", "#666666")
+
+# spatial plot showing annotation labels
+ggplot(df, aes(x = x, y = y, color = label)) + 
+  geom_point(size = 0.5) + 
+  scale_color_manual(values = pal) + 
+  coord_fixed() + 
+  scale_y_reverse() + 
+  ggtitle("Manually annotated") + 
+  theme_bw() + 
+  theme(panel.grid = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text = element_blank(), 
+        axis.ticks = element_blank()) + 
+  guides(color = guide_legend(override.aes = list(size = 2)))
+```
+
+Alternatively, create a plot showing expression intensity of a specific gene of interest.
+
+```{r}
+# set up data frame
+my_gene <- "MOBP"
+ix <- which(rowData(spe)$gene_name == my_gene)
+df <- cbind(df, gene = counts(spe)[ix, ])
+```
+
+```{r}
+# spatial plot showing gene expression
+ggplot(df, aes(x = x, y = y, color = gene)) + 
+  geom_point(size = 0.5) + 
+  scale_color_gradient(low = "gray85", high = "blue") + 
+  coord_fixed() + 
+  scale_y_reverse() + 
+  ggtitle(my_gene) + 
+  theme_bw() + 
+  theme(panel.grid = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text = element_blank(), 
+        axis.ticks = element_blank())
+```
+
+
+## Reduced dimension plots
+
+We can also generate reduced dimension plots for this dataset to further investigate the annotation labels or a gene of interest.
+
+```{r}
+# PCA plot showing annotation labels
+ggplot(df, aes(x = PC1, y = PC2, color = label)) + 
+  geom_point(alpha = 0.5, size = 0.5) + 
+  ggtitle("PCA") + 
+  theme_bw() + 
+  theme(panel.grid = element_blank()) + 
+  guides(color = guide_legend(override.aes = list(size = 2)))
+```
+
+```{r}
+# UMAP plot showing annotation labels
+ggplot(df, aes(x = UMAP1, y = UMAP2, color = label)) + 
+  geom_point(alpha = 0.5, size = 0.5) + 
+  ggtitle("UMAP") + 
+  theme_bw() + 
+  theme(panel.grid = element_blank()) + 
+  guides(color = guide_legend(override.aes = list(size = 2)))
+```
+
+```{r}
+# UMAP plot showing gene expression
+ggplot(df, aes(x = UMAP1, y = UMAP2, color = gene)) + 
+  geom_point(alpha = 0.5, size = 0.5) + 
+  scale_color_gradient(low = "gray85", high = "blue") + 
+  ggtitle(my_gene) + 
+  theme_bw() + 
+  theme(panel.grid = element_blank())
 ```
