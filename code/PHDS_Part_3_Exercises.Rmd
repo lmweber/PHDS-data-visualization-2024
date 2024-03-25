@@ -1,7 +1,7 @@
 ---
 title: "PHDS Data Visualization Workshop: Exercise Session"
 author: "Prasad Patil and Lukas M. Weber"
-date: "2024-03-22"
+date: "2024-03-26"
 output: html_document
 ---
 
@@ -31,7 +31,7 @@ library(here)
 library(tidytuesdayR)
 ```
 
-Download the dataset from the `tidytuesdayR` package:
+Download the dataset from the `tidytuesdayR` package.
 
 ```{r}
 # download dataset from tidytuesdayR package
@@ -41,7 +41,7 @@ tuesdata <- tt_load("2023-06-20")
 tuesdata
 ```
 
-Extract the data:
+Extract the data.
 
 ```{r}
 # extract data
@@ -50,7 +50,7 @@ places <- tuesdata$places
 day_parts_map <- tuesdata$day_parts_map
 ```
 
-Alternatively, the data objects can also be downloaded and read in from links to the .csv files:
+Alternatively, the data objects can also be downloaded and read in from links to the .csv files.
 
 ```{r}
 # alternatively, download and read in from links to .csv files
@@ -59,7 +59,7 @@ Alternatively, the data objects can also be downloaded and read in from links to
 # day_parts_map <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-06-20/day_parts_map.csv")
 ```
 
-Have a look at the data:
+Have a look at the data.
 
 ```{r}
 ufo_sightings
@@ -76,7 +76,7 @@ dim(day_parts_map)
 
 Add the columns `latitude` and `longitude` to the main data frame `ufo_sightings`.
 
-Note that this dataset is somewhat messy. There are some duplicated entries in `places`, which we need to remove before we join the data frames. The duplicated rows can be identified by combining the `city`, `state`, and `country_code` columns.
+Note that there are some duplicated entries in `places`, which we need to remove before we join the data frames. The duplicated rows can be identified by combining the `city`, `state`, and `country_code` columns, as shown below.
 
 ```{r}
 # remove duplicated entries in 'places'
