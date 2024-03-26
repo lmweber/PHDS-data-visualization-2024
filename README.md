@@ -15,4 +15,4 @@ Code and data files for the interactive demonstrations and exercise sessions are
 
 ## Slides
 
-[Link to slides](https://docs.google.com/presentation/d/1p4y7FKk2QOKNc2EcshWYes6Q9HGLcPVhu-1jtLKYdJ0/edit?usp=sharing)
+Slides from the workshop are available [here](https://docs.google.com/presentation/d/1p4y7FKk2QOKNc2EcshWYes6Q9HGLcPVhu-1jtLKYdJ0/edit?usp=sharing).
