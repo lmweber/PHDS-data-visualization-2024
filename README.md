@@ -9,5 +9,5 @@ Instructors: [Prasad Patil](https://www.bu.edu/sph/profile/prasad-patil/) and [L
 
 Code and data files for the interactive demonstrations and exercise sessions are saved in the following folders:
 
-- [code](code/): R Markdown (.Rmd) scripts
+- [code](code/): R Markdown (.Rmd) scripts and output (.html) files
 - [data](data/): .csv data files
