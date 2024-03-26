@@ -1624,6 +1624,21 @@ ufo_sightings_latlong &lt;- ufo_sightings |&gt;
 
 dim(ufo_sightings_latlong)</code></pre>
 <pre><code>## [1] 96429    14</code></pre>
+<p>We also convert the date and time format by using functions from the
+<code>lubridate</code> package (part of <code>tidyverse</code>) to split
+the values into separate columns, which may be more easily accessible
+for some types of plots.</p>
+<pre class="r"><code># convert date and time
+ufo_sightings_latlong &lt;- ufo_sightings_latlong |&gt; 
+  mutate(year = year(reported_date_time_utc), 
+         month = month(reported_date_time_utc), 
+         day = day(reported_date_time_utc), 
+         hour = hour(reported_date_time_utc), 
+         minute = minute(reported_date_time_utc), 
+         second = second(reported_date_time_utc))
+
+dim(ufo_sightings_latlong)</code></pre>
+<pre><code>## [1] 96429    20</code></pre>
 </div>
 <div id="save-data" class="section level1">
 <h1>Save data</h1>

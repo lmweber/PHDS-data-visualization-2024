@@ -103,6 +103,21 @@ ufo_sightings_latlong <- ufo_sightings |>
 dim(ufo_sightings_latlong)
 ```
 
+We also convert the date and time format by using functions from the `lubridate` package (part of `tidyverse`) to split the values into separate columns, which may be more easily accessible for some types of plots.
+
+```{r}
+# convert date and time
+ufo_sightings_latlong <- ufo_sightings_latlong |> 
+  mutate(year = year(reported_date_time_utc), 
+         month = month(reported_date_time_utc), 
+         day = day(reported_date_time_utc), 
+         hour = hour(reported_date_time_utc), 
+         minute = minute(reported_date_time_utc), 
+         second = second(reported_date_time_utc))
+
+dim(ufo_sightings_latlong)
+```
+
 
 # Save data
 
